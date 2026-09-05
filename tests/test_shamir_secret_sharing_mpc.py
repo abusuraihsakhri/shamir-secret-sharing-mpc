@@ -1,7 +1,6 @@
 """
 Real tests for Shamir's Secret Sharing Engine.
 """
-import random
 import unittest
 import sys
 import os
@@ -111,18 +110,15 @@ class TestGenerateCoefficients(unittest.TestCase):
 class TestShareGeneration(unittest.TestCase):
 
     def test_correct_number_of_shares(self):
-        random.seed(42)
         shares, p = generate_shares(42, 3, 5)
         self.assertEqual(len(shares), 5)
 
     def test_share_x_values_sequential(self):
-        random.seed(42)
         shares, p = generate_shares(42, 3, 5)
         x_values = [s[0] for s in shares]
         self.assertEqual(x_values, [1, 2, 3, 4, 5])
 
     def test_shares_in_field(self):
-        random.seed(42)
         shares, p = generate_shares(42, 3, 5)
         for x, y in shares:
             self.assertGreaterEqual(y, 0)
@@ -133,7 +129,6 @@ class TestShareGeneration(unittest.TestCase):
             generate_shares(42, 5, 3)
 
     def test_auto_prime(self):
-        random.seed(42)
         shares, p = generate_shares(100, 3, 5)
         self.assertTrue(_is_prime(p))
         self.assertGreater(p, 100)
@@ -142,14 +137,12 @@ class TestShareGeneration(unittest.TestCase):
 class TestReconstruction(unittest.TestCase):
 
     def test_basic_reconstruction(self):
-        random.seed(42)
         secret = 12345
         shares, p = generate_shares(secret, 3, 5)
         reconstructed = reconstruct_secret(shares[:3], p)
         self.assertEqual(reconstructed, secret)
 
     def test_any_k_shares_work(self):
-        random.seed(42)
         secret = 999
         shares, p = generate_shares(secret, 3, 5)
         # Try different subsets of 3 shares
@@ -159,7 +152,6 @@ class TestReconstruction(unittest.TestCase):
                 self.assertEqual(reconstruct_secret(subset, p), secret)
 
     def test_all_shares_reconstruct(self):
-        random.seed(42)
         secret = 42
         shares, p = generate_shares(secret, 2, 4)
         reconstructed = reconstruct_secret(shares, p)
@@ -174,7 +166,6 @@ class TestReconstruction(unittest.TestCase):
             reconstruct_secret([(1, 5), (1, 10)], 7)
 
     def test_large_secret(self):
-        random.seed(42)
         # Use a known large prime and a secret that fits
         p = 104729  # known prime
         secret = 100000
@@ -195,23 +186,19 @@ class TestVerification(unittest.TestCase):
         self.assertFalse(verify_share((0, 5), 7))
 
     def test_verify_shares_all_valid(self):
-        random.seed(42)
         shares, p = generate_shares(42, 3, 5)
         self.assertTrue(verify_shares(shares, p))
 
     def test_verify_reconstruction_correct(self):
-        random.seed(42)
         secret = 42
         shares, p = generate_shares(secret, 3, 5)
         self.assertTrue(verify_reconstruction(shares[:3], p, secret))
 
     def test_verify_reconstruction_wrong_secret(self):
-        random.seed(42)
         shares, p = generate_shares(42, 3, 5)
         self.assertFalse(verify_reconstruction(shares[:3], p, 999))
 
     def test_verify_consistency(self):
-        random.seed(42)
         shares, p = generate_shares(42, 3, 5)
         self.assertTrue(verify_consistency(shares, 3, p))
 
@@ -260,7 +247,6 @@ class TestCommitments(unittest.TestCase):
 class TestHighLevelAPI(unittest.TestCase):
 
     def test_split_secret(self):
-        random.seed(42)
         result = split_secret(42, 3, 5)
         self.assertEqual(result["threshold"], 3)
         self.assertEqual(result["num_shares"], 5)
@@ -268,7 +254,6 @@ class TestHighLevelAPI(unittest.TestCase):
         self.assertEqual(len(result["commitments"]), 5)
 
     def test_split_and_reconstruct(self):
-        random.seed(42)
         secret = 123456
         split_result = split_secret(secret, 3, 5)
         shares = split_result["shares"]
@@ -278,7 +263,6 @@ class TestHighLevelAPI(unittest.TestCase):
         self.assertEqual(recon_result["secret"], secret)
 
     def test_reconstruct_with_all_shares(self):
-        random.seed(42)
         secret = 777
         split_result = split_secret(secret, 2, 4)
         recon_result = reconstruct_from_shares(split_result["shares"], split_result["prime"])

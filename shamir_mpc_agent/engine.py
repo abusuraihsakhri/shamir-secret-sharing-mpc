@@ -4,7 +4,7 @@ Implements: (k, n) threshold secret sharing with polynomial evaluation over prim
 Lagrange interpolation reconstruction, share verification, and information-theoretic security.
 Uses only Python stdlib.
 """
-import random
+import secrets
 import hashlib
 import json
 from typing import List, Tuple, Dict, Any, Optional
@@ -46,6 +46,7 @@ def generate_coefficients(k: int, p: int, secret: int) -> List[int]:
     """
     Generate random polynomial coefficients for a (k, n) sharing scheme.
     Returns [secret, a1, a2, ..., a_{k-1}] where each ai is random in [0, p).
+    Uses cryptographically secure randomness (secrets module).
     """
     if k < 2:
         raise ValueError("Threshold k must be at least 2")
@@ -53,7 +54,7 @@ def generate_coefficients(k: int, p: int, secret: int) -> List[int]:
         raise ValueError(f"Secret must be in [0, {p})")
     coefficients = [secret]
     for _ in range(k - 1):
-        coefficients.append(random.randrange(0, p))
+        coefficients.append(secrets.randbelow(p))
     return coefficients
 
 
@@ -281,12 +282,61 @@ def reconstruct_from_shares(shares: List[Tuple[int, int]], p: int) -> Dict[str, 
     """
     if not verify_shares(shares, p):
         return {"error": "Invalid share coordinates", "valid": False}
-    
+
     secret = reconstruct_secret(shares, p)
-    
+
     return {
         "secret": secret,
         "num_shares_used": len(shares),
         "prime": p,
         "valid": True,
     }
+
+
+# ---------------------------------------------------------------------------
+# Frontier Domain Engine — parameter evaluation for agent auditing
+# ---------------------------------------------------------------------------
+
+class FrontierDomainEngine:
+    """
+    Domain-specific evaluation engine used by the sub-agents to audit
+    payloads against Shamir (k,n) & Feldman VSS operational thresholds.
+    """
+
+    PRIMARY_THRESHOLD = 25.0
+    SECONDARY_THRESHOLD = 12.0
+
+    @classmethod
+    def evaluate_primary_parameter(cls, primary_metric: float) -> Optional[Dict[str, Any]]:
+        """Evaluate primary metric against reference threshold."""
+        if primary_metric > cls.PRIMARY_THRESHOLD:
+            return {
+                "summary": "Primary parameter exceeds operational reference limit",
+                "details": f"Primary metric ({primary_metric:.2f}) exceeds upper reference limit ({cls.PRIMARY_THRESHOLD:.2f}) under Shamir (k,n) & Feldman VSS.",
+                "remediation": "Initiate recalibration workflow and review secondary parameters.",
+            }
+        return None
+
+    @classmethod
+    def evaluate_secondary_kinetics(cls, secondary_metric: float, is_critical_flag: bool) -> Optional[Dict[str, Any]]:
+        """Evaluate secondary metric and critical flag against safety thresholds."""
+        if is_critical_flag or secondary_metric > cls.SECONDARY_THRESHOLD:
+            return {
+                "summary": "Critical safety interlock triggered",
+                "details": f"CriticalFlag={is_critical_flag} with secondary index {secondary_metric:.2f}.",
+                "remediation": "Execute immediate closed-loop escalation and notify attending supervisor.",
+            }
+        return None
+
+    @classmethod
+    def audit_specification_conformance(cls, status_descriptor: str, attributes: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Audit status descriptor for protocol conformance."""
+        desc_upper = str(status_descriptor).upper()
+        discordant_markers = ["DISCORDANT", "ANOMALY", "MUTANT", "VIOLATION", "FAIL", "REJECT"]
+        if any(w in desc_upper for w in discordant_markers):
+            return {
+                "summary": "Protocol conformance discordance detected",
+                "details": f"Descriptor '{status_descriptor}' indicates discordance with Shamir (k,n) & Feldman VSS specifications.",
+                "remediation": "Re-evaluate input or rerun secondary confirmation.",
+            }
+        return None

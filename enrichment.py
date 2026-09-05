@@ -420,8 +420,8 @@ class ShamirsecretsharingmpcEnrichmentSuite:
         self.thresholdsharingscal = ThresholdSharingScalabilityAnalyzerEngine()
         self.formalsecurityproofd = FormalSecurityProofDocumentationInformationtheoreticSecurityEngine()
         self.nistcompliancecertif = NistComplianceCertificationChecklistWithTestVectorValidationEngine()
-        self.additionalenhancemen = AdditionalEnhancementProactiveShareRotationManagerEngine()
-        self.additionalenhancemen = AdditionalEnhancementDistributedKeyGenerationSimulatorEngine()
+        self.proactivesharerotation = AdditionalEnhancementProactiveShareRotationManagerEngine()
+        self.dkgsimulator = AdditionalEnhancementDistributedKeyGenerationSimulatorEngine()
 
     def execute_all(self, primary_val: float = 1.5, secondary_val: float = 0.5) -> Dict[str, Any]:
         results = {}
@@ -431,8 +431,8 @@ class ShamirsecretsharingmpcEnrichmentSuite:
         results["ThresholdSharingScalabilityAnalyzerEngine"] = self.thresholdsharingscal.evaluate(primary_val, secondary_val)
         results["FormalSecurityProofDocumentationInformationtheoreticSecurityEngine"] = self.formalsecurityproofd.evaluate(primary_val, secondary_val)
         results["NistComplianceCertificationChecklistWithTestVectorValidationEngine"] = self.nistcompliancecertif.evaluate(primary_val, secondary_val)
-        results["AdditionalEnhancementProactiveShareRotationManagerEngine"] = self.additionalenhancemen.evaluate(primary_val, secondary_val)
-        results["AdditionalEnhancementDistributedKeyGenerationSimulatorEngine"] = self.additionalenhancemen.evaluate(primary_val, secondary_val)
+        results["AdditionalEnhancementProactiveShareRotationManagerEngine"] = self.proactivesharerotation.evaluate(primary_val, secondary_val)
+        results["AdditionalEnhancementDistributedKeyGenerationSimulatorEngine"] = self.dkgsimulator.evaluate(primary_val, secondary_val)
         return results
 
 # Global instance

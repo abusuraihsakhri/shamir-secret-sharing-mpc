@@ -1,97 +1,144 @@
 # Shamir Secret Sharing MPC
 
-> **Domain:** Post-Quantum Cryptography & Zero-Knowledge Architecture  
-> **Reference Guidelines & Standards:** `NIST FIPS 203/204/205, NIST SP 800-90B & ISO/IEC Standards`
+> **Domain:** Post-Quantum Cryptography & Zero-Knowledge Architecture
+> **Standards:** Shamir (k,n) Threshold Scheme, Feldman VSS
 
 <div align="center">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB.svg?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688.svg?logo=fastapi&logoColor=white)
-![Audit Trail](https://img.shields.io/badge/Audit-HMAC--SHA256_Tamper--Evident-brightgreen.svg)
-![Zero-PHI Guard](https://img.shields.io/badge/Guard-Zero--PHI_Outbound-blue.svg)
-![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker&logoColor=white)
 
 </div>
 
 ---
 
-## 📖 What It Does
+## What It Does
 
-**Shamir Secret Sharing MPC** is an advanced analytical and computational platform implementing Shamir (k,n) verifiable threshold secret sharing & distributed key generation (DKG) agent.
-
----
-
-## ⚙️ Key Capabilities & Algorithmic Modules
-
-- **Deterministic Calculation Engine**: Strict compliance with standard reference formulations and thresholds.
-- **Risk & Urgency Classification**: Multi-tier categorization with automated clinical/operational action recommendations.
-- **Validation & Guardrails**: Rigorous input bounds checking and anomaly detection.
+**Shamir Secret Sharing MPC** implements Shamir (k,n) verifiable threshold secret sharing over prime fields, including share generation, Lagrange interpolation reconstruction, share verification, and information-theoretic security analysis. It also includes a FastAPI REST server and a multi-agent auditing framework.
 
 ---
 
-## 💻 CLI Quickstart & Usage
+## Key Features
 
-### 1. Guided Interactive Mode
+- **Secret Sharing Engine**: Split secrets into n shares where any k can reconstruct (uses cryptographically secure randomness)
+- **Lagrange Interpolation**: Reconstruct secrets from any k shares
+- **Share Verification**: Validate shares and verify reconstruction correctness
+- **Hash-based Commitments**: SHA-256 commitments for share integrity
+- **Information-Theoretic Security Analysis**: Analyze the perfect secrecy guarantees
+- **Multi-Agent Auditing Framework**: Sub-agent system for payload evaluation with HMAC-SHA256 audit trail
+- **FastAPI REST API**: HTTP endpoints for remote operation
+- **Prometheus Metrics**: Operational telemetry export
+
+---
+
+## Installation
+
 ```bash
-python cli.py
+pip install -e .
 ```
 
-### 2. Direct Parameterized Evaluation
+For development (with test dependencies):
 ```bash
-python cli.py --secret <value> --k <value> --n <value> --prime <value>
+pip install -e ".[dev]"
 ```
 
-### Parameter Reference
-- `--secret`: Specifies input measurement or parameter value.
-- `--k`: Specifies input measurement or parameter value.
-- `--n`: Specifies input measurement or parameter value.
-- `--prime`: Specifies input measurement or parameter value.
-- `--shares`: Specifies input measurement or parameter value.
-- `--share`: Specifies input measurement or parameter value.
-
-### Input Data Schema
-
-| Field | Description | Requirement |
-|:------|:------------|:------------|
-| `task_id` | Parameter / observation metric | Required |
-| `target_identifier` | Parameter / observation metric | Required |
-| `primary_metric` | Parameter / observation metric | Required |
-| `secondary_metric` | Parameter / observation metric | Required |
-| `is_critical_flag` | Parameter / observation metric | Required |
-| `status_descriptor` | Parameter / observation metric | Required |
-
 ---
 
-## 🛡️ Security & Enterprise Architecture
+## CLI Usage
 
-* **Zero-PHI Outbound Interceptor:** Active AST and regex inspection blocking SSNs, MRNs, phone numbers, and patient identifiers.
-* **Tamper-Evident HMAC-SHA256 Audit Trail:** Chained, cryptographically signed logs for every evaluation and state transition.
-* **Air-Gapped LLM Reasoning Adapter:** Agnostic integration for local Ollama instances (`llama3`, `mistral`), Claude 3.5 Sonnet, GPT-4o, and deterministic test mocks.
-* **Active Learning Bayesian Calibration:** Dynamic tracker updating worker reliability weights and monitoring Brier calibration drift.
-* **FastAPI & Prometheus Telemetry:** Exposes OpenAPI 3.1 REST endpoints and operational Prometheus metrics (`/metrics`).
-
----
-
-## 🧪 Testing & Verification
-
-Run the automated test suite:
+### Secret Sharing CLI
 
 ```bash
+# Split a secret into shares
+python cli.py split --secret 12345 --k 3 --n 5
+
+# Reconstruct from shares
+python cli.py reconstruct --shares '[[1, 123], [2, 456], [3, 789]]' --prime 257
+
+# Verify shares reconstruct correctly
+python cli.py verify --shares '[[1, 123], [2, 456], [3, 789]]' --secret 12345 --k 3 --prime 257
+
+# Information-theoretic security analysis
+python cli.py info --k 3 --n 5 --prime 257
+
+# Generate a commitment for a share
+python cli.py commit --share '[1, 123]' --prime 257
+```
+
+### Agent Framework CLI
+
+```bash
+# Run audit evaluation
+python -m shamir_mpc_agent.cli audit --task-id TASK-001
+
+# Batch process CSV
+python -m shamir_mpc_agent.cli batch -i sample.csv -o results.csv
+
+# Launch REST server
+python -m shamir_mpc_agent.cli serve --host 127.0.0.1 --port 8000
+```
+
+---
+
+## REST API
+
+When running the server (`python -m shamir_mpc_agent.cli serve`), the following endpoints are available:
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/health` | Health check |
+| POST | `/api/audit` | Run audit evaluation |
+| POST | `/api/chat` | Query supervisory chat |
+
+---
+
+## Testing
+
+```bash
+# Run all tests
 pytest -v
-```
 
-Execute high-throughput batch simulation benchmarks:
-
-```bash
-python simulator.py --tasks 1000 --concurrency 8
+# Run specific test module
+pytest tests/test_shamir_secret_sharing_mpc.py -v
 ```
 
 ---
 
-## 🐳 Container Deployment
+## Security Notes
 
-```bash
-docker build -t shamir-secret-sharing-mpc .
-docker run -p 8000:8000 shamir-secret-sharing-mpc
+- The secret sharing engine uses `secrets.randbelow()` for cryptographically secure coefficient generation
+- The HMAC-SHA256 audit trail requires the `AUDIT_SECRET_KEY` environment variable (minimum 16 characters)
+- Set the audit key before running:
+  ```bash
+  export AUDIT_SECRET_KEY="your-secure-key-here"
+  ```
+
+---
+
+## Project Structure
+
 ```
+shamir-secret-sharing-mpc/
+├── shamir_mpc_agent/      # Core engine and agent framework
+│   ├── engine.py          # Secret sharing math (split, reconstruct, verify)
+│   ├── agents.py          # Sub-agent auditing system
+│   ├── models.py          # Data models
+│   ├── cli.py             # Agent CLI entry point
+│   └── server.py          # FastAPI application
+├── agents/                # Enterprise agent framework
+│   ├── base.py            # PHI guard, audit trail, security
+│   ├── supervisor.py      # Master orchestrator
+│   ├── workers.py         # Domain worker agents
+│   └── models.py          # Pydantic schemas
+├── tests/                 # Test suite
+├── cli.py                 # Secret sharing CLI
+├── enrichment.py          # Enrichment feature suite
+└── pyproject.toml         # Package configuration
+```
+
+---
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
