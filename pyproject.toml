@@ -20,8 +20,8 @@ dependencies = []
 
 [project.optional-dependencies]
 server = ["fastapi>=0.110,<1", "uvicorn>=0.27,<1", "pydantic>=2,<3"]
-dev = ["pytest>=7,<10"]
-all = ["fastapi>=0.110,<1", "uvicorn>=0.27,<1", "pydantic>=2,<3", "pytest>=7,<10"]
+dev = ["pytest>=7,<10", "httpx>=0.27,<1"]
+all = ["fastapi>=0.110,<1", "uvicorn>=0.27,<1", "pydantic>=2,<3", "pytest>=7,<10", "httpx>=0.27,<1"]
 
 [project.scripts]
 shamir-secret-sharing-mpc = "shamir_mpc_agent.cli:main"
