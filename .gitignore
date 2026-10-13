@@ -16,3 +16,10 @@ venv/
 .vscode/
 *.swp
 .DS_Store
+
+.env.*
+!.env.example
+.coverage
+htmlcov/
+.ruff_cache/
+node_modules/

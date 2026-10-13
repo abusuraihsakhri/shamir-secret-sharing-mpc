@@ -4,11 +4,31 @@ Command-Line Interface for Shamir (k, n) Verifiable Threshold Secret Sharing & D
 import argparse
 import csv
 import json
+import math
 import sys
 from .models import FrontierPayload
 from .agents import ThresholdSecretCoordinator
 
 coordinator = ThresholdSecretCoordinator()
+
+def parse_bool(value):
+    """Parse CSV boolean strings without treating 'False' as true."""
+    if isinstance(value, bool):
+        return value
+    normalized = str(value or "").strip().lower()
+    if normalized in ("true", "1", "yes", "y", "on"):
+        return True
+    if normalized in ("false", "0", "no", "n", "off", ""):
+        return False
+    raise ValueError(f"Unrecognized boolean value: {value!r}")
+
+
+def parse_metric(value, name):
+    result = float(value)
+    if not math.isfinite(result):
+        raise ValueError(f"{name} must be a finite number")
+    return result
+
 
 
 def main(argv=None):
@@ -74,16 +94,17 @@ def main(argv=None):
             fieldnames = list(reader.fieldnames or [])
             rows = list(reader)
 
-        out_fields = fieldnames + ["overall_status", "total_alerts", "critical_count", "consensus_summary"]
+        derived_fields = ["overall_status", "total_alerts", "critical_count", "consensus_summary"]
+        out_fields = fieldnames + [name for name in derived_fields if name not in fieldnames]
         out_rows = []
         for r in rows:
             payload = FrontierPayload(
                 task_id=r.get("task_id", "TASK-01"),
                 target_identifier=r.get("target_identifier", "TARGET-01"),
-                primary_metric=float(r.get("primary_metric", 15.0)),
-                secondary_metric=float(r.get("secondary_metric", 5.0)),
+                primary_metric=parse_metric(r.get("primary_metric", 15.0), "primary_metric"),
+                secondary_metric=parse_metric(r.get("secondary_metric", 5.0), "secondary_metric"),
                 status_descriptor=r.get("status_descriptor", "NOMINAL"),
-                is_critical_flag=bool(r.get("is_critical_flag", False)),
+                is_critical_flag=parse_bool(r.get("is_critical_flag", False)),
             )
             dossier = coordinator.process(payload)
             row_dict = dict(r)

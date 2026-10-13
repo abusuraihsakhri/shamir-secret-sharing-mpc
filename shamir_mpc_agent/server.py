@@ -15,7 +15,7 @@ def create_app():
 
         app = FastAPI(
             title="Shamir (k, n) Verifiable Threshold Secret Sharing & Distributed Key Generation Agent",
-            description="Implements polynomial-based secret sharing over Galois Fields (GF(2^8) / GF(2^256)), Feldmann verifiable commitments, and proactive threshold share rotation.",
+            description="Illustrative rule-based task audit API. Does not expose the secret-sharing engine or Feldman VSS.",
             version="2.0.0-FRONTIER",
         )
 

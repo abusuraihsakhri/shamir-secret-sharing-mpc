@@ -1,236 +1,133 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shamir Secret Sharing Mpc — Operations Console</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #090d16;
-            --card: #111827;
-            --border: #1f293d;
-            --accent: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.25);
-            --text: #f3f4f6;
-            --text-muted: #9ca3af;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --success: #10b981;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            padding: 2rem;
-            min-height: 100vh;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        .header-title h1 { font-size: 1.6rem; font-weight: 700; color: #fff; }
-        .header-title p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
-        .badge {
-            display: inline-block;
-            padding: 0.3rem 0.8rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            background: var(--accent-glow);
-            color: var(--accent);
-            border: 1px solid var(--accent);
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 1.5rem;
-        }
-        .card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
-        .card h2 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; }
-        input, select, textarea {
-            width: 100%;
-            padding: 0.65rem 0.9rem;
-            background: #0d1322;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: #fff;
-            font-family: inherit;
-            font-size: 0.9rem;
-        }
-        input:focus, textarea:focus { outline: none; border-color: var(--accent); }
-        .btn {
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            padding: 0.7rem 1.4rem;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            width: 100%;
-        }
-        .btn:hover { background: #2563eb; }
-        .terminal {
-            background: #060911;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: #10b981;
-            height: 380px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-        }
-        .metrics-bar {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .metric-box {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-        }
-        .metric-val { font-size: 1.4rem; font-weight: 700; color: #fff; margin-top: 0.25rem; }
-        .metric-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Shamir Secret Sharing — Browser Demonstration</title>
+  <style>
+    :root {font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#e8eef8;background:#0b1220}
+    * {box-sizing:border-box}
+    body {margin:0;padding:32px 20px}
+    main {max-width:990px;margin:auto}
+    h1 {font-size:clamp(1.55rem,3vw,2.3rem);margin:0 0 8px}
+    h2 {font-size:1.15rem;margin:0 0 16px}
+    p {line-height:1.55;color:#b7c5d8}
+    header {margin-bottom:24px}
+    .eyebrow {letter-spacing:.09em;text-transform:uppercase;color:#93c5fd;font-size:.8rem;font-weight:700}
+    .layout {display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    section {background:#151f32;border:1px solid #34445c;border-radius:12px;padding:22px;min-width:0}
+    .field {margin:0 0 15px}
+    label {display:block;margin-bottom:6px;font-size:.91rem;font-weight:600}
+    input,textarea {display:block;width:100%;border-radius:7px;border:1px solid #57677c;padding:10px 12px;color:#fff;background:#091321;font:inherit}
+    textarea {font: .88rem/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;min-height:135px;resize:vertical}
+    input:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible {outline:3px solid #93c5fd;outline-offset:2px}
+    .twocol {display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    button {background:#2563eb;color:white;border:1px solid #60a5fa;border-radius:7px;padding:11px 16px;font:inherit;font-weight:650;cursor:pointer}
+    button:hover {background:#1d4ed8}
+    button.secondary {background:#28384e;border-color:#64748b}
+    button:disabled {opacity:.55;cursor:wait}
+    .actions {display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+    .muted,.hint {color:#9eb0c6;font-size:.85rem}
+    .status {min-height:24px;white-space:pre-wrap;font-size:.9rem;margin:10px 0}
+    .error {color:#fca5a5}
+    .success {color:#86efac}
+    .output {background:#08111f;padding:12px;border:1px solid #36485e;border-radius:7px;max-height:280px;overflow:auto;white-space:pre-wrap;word-break:break-word;font:.82rem/1.55 ui-monospace,Consolas,monospace}
+    .note {border-left:3px solid #f59e0b;padding:8px 12px;background:#1f2631;margin:18px 0;color:#f8dba2}
+    footer {margin:22px 0 0;color:#aabbd0;font-size:.88rem}
+    a {color:#93c5fd}
+    @media(max-width:760px){body{padding:20px 12px}.layout{grid-template-columns:1fr}section{padding:17px}.twocol{gap:9px}}
+  </style>
 </head>
 <body>
-
-    <div class="header">
-        <div class="header-title">
-            <h1>Shamir Secret Sharing Mpc</h1>
-            <p>Domain: Clinical & Cryptographic AI | Standard: CAP / CLSI / NIST Standards | LabMind-Atlas Architecture</p>
+<main>
+  <header>
+    <div class="eyebrow">Local browser demonstration</div>
+    <h1>Shamir Secret Sharing</h1>
+    <p>Split an integer into shares over a prime field, then reconstruct it by Lagrange interpolation. All calculations run in this browser tab; no server API is called.</p>
+  </header>
+  <p class="note"><strong>Educational use only.</strong> Do not enter production keys or sensitive secrets. This demonstrates Shamir splitting, not authenticated verifiable secret sharing, distributed key generation, or a complete multiparty-computation protocol. A reconstructed number cannot be authenticated without an independent trusted check.</p>
+  <div class="layout">
+    <section aria-labelledby="split-heading">
+      <h2 id="split-heading">1. Generate shares</h2>
+      <form id="split-form">
+        <div class="field"><label for="secret">Secret (non-negative decimal integer)</label><input id="secret" name="secret" inputmode="numeric" value="12345" autocomplete="off" required></div>
+        <div class="twocol">
+          <div class="field"><label for="threshold">Threshold (k)</label><input id="threshold" type="number" min="2" max="64" step="1" value="3" required></div>
+          <div class="field"><label for="count">Total shares (n)</label><input id="count" type="number" min="2" max="64" step="1" value="5" required></div>
         </div>
-        <div>
-            <span class="badge">Air-Gapped Active</span>
-            <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; border-color: #10b981;">Zero-PHI Guard Active</span>
-        </div>
-    </div>
-
-    <div class="metrics-bar">
-        <div class="metric-box">
-            <div class="metric-label">System Status</div>
-            <div class="metric-val" style="color: var(--success);" id="m-status">OPTIMAL</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">Tasks Processed</div>
-            <div class="metric-val" id="m-tasks">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">Audit Blocks Signed</div>
-            <div class="metric-val" id="m-audit">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">PHI Interceptions</div>
-            <div class="metric-val" style="color: var(--accent);" id="m-phi">0</div>
-        </div>
-    </div>
-
-    <div class="grid">
-        <div class="card">
-            <h2>⚙️ Dispatch Distributed Component Audit</h2>
-            <div class="form-group">
-                <label>Task / Sample ID</label>
-                <input type="text" id="task_id" value="TASK-2026-LIVE-01">
-            </div>
-            <div class="form-group">
-                <label>Target Identifier</label>
-                <input type="text" id="target_id" value="SPECIMEN-ALPHA-77">
-            </div>
-            <div class="form-group">
-                <label>Primary Measurement / Value</label>
-                <input type="number" id="primary_metric" value="29.4" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Secondary Metric / Kinetic Index</label>
-                <input type="number" id="secondary_metric" value="14.8" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Status / Phenotype Descriptor</label>
-                <input type="text" id="status_descriptor" value="DISCORDANT_ANOMALY">
-            </div>
-            <div class="form-group">
-                <label><input type="checkbox" id="is_critical" checked> Trigger Emergency / Critical Flag</label>
-            </div>
-            <button class="btn" onclick="runAudit()">Execute Distributed Component Audit</button>
-        </div>
-
-        <div class="card">
-            <h2>📊 Real-Time Consensus Dossier & Audit Log</h2>
-            <div class="terminal" id="outputConsole">// Shamir Secret Sharing Mpc Operations Console Ready
-// Connection established with Air-Gapped Supervisor
-// Cryptographic HMAC-SHA256 audit ledger loaded.
-// Ready for live task payload dispatch...</div>
-        </div>
-    </div>
-
-    <script>
-        async function runAudit() {
-            const consoleEl = document.getElementById('outputConsole');
-            consoleEl.innerText = "// Dispatching task across specialized workers...
-// Invoking InvariantQCWorker, SafetyEscalationWorker, ProtocolWorker...";
-
-            const payload = {
-                task_id: document.getElementById('task_id').value,
-                target_identifier: document.getElementById('target_id').value,
-                primary_metric: parseFloat(document.getElementById('primary_metric').value),
-                secondary_metric: parseFloat(document.getElementById('secondary_metric').value),
-                status_descriptor: document.getElementById('status_descriptor').value,
-                is_critical_flag: document.getElementById('is_critical').checked
-            };
-
-            try {
-                const res = await fetch('/api/audit', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                consoleEl.innerText = JSON.stringify(data, null, 2);
-                document.getElementById('m-tasks').innerText = parseInt(document.getElementById('m-tasks').innerText) + 1;
-                document.getElementById('m-audit').innerText = parseInt(document.getElementById('m-audit').innerText) + 1;
-            } catch (err) {
-                consoleEl.innerText = "// Offline / Simulation Output:\n" + JSON.stringify({
-                    dossier_id: "DOSSIER-SIM-" + Math.floor(Math.random()*10000),
-                    system: "shamir-secret-sharing-mpc",
-                    domain: "Clinical & Cryptographic AI",
-                    task_id: payload.task_id,
-                    overall_urgency: payload.is_critical_flag ? "CRITICAL_STAT_PANIC" : "ELEVATED_RISK",
-                    integrity_status: "DISCORDANT_ANOMALY",
-                    alerts: [
-                        { worker: "InvariantQCWorker", alert: "Primary metric exceeds upper reference bound" },
-                        { worker: "SafetyEscalationWorker", alert: "Critical emergency interlock flag active" }
-                    ],
-                    audit_hash: "HMAC_SHA256_e83f9a72b941d6c381f9"
-                }, null, 2);
-            }
-        }
-    </script>
+        <div class="field"><label for="split-prime">Prime modulus (optional)</label><input id="split-prime" inputmode="numeric" placeholder="Generate automatically" autocomplete="off"><span class="hint">Must be larger than the secret and n.</span></div>
+        <button type="submit" id="split-button">Generate shares</button>
+      </form>
+      <p id="split-status" class="status" role="status" aria-live="polite"></p>
+      <div id="split-output" class="output" aria-label="Generated shares">No shares generated.</div>
+      <div class="actions"><button type="button" class="secondary" id="copy-button" disabled>Copy shares JSON</button></div>
+      <p class="hint">Keep the modulus and threshold with the shares. Different subsets of k shares can reconstruct; fewer than k private shares convey no information under the scheme assumptions.</p>
+    </section>
+    <section aria-labelledby="recon-heading">
+      <h2 id="recon-heading">2. Reconstruct an integer</h2>
+      <form id="recon-form">
+        <div class="field"><label for="recon-prime">Prime modulus</label><input id="recon-prime" inputmode="numeric" autocomplete="off" required></div>
+        <div class="field"><label for="recon-shares">Shares JSON — array of [x, y] pairs</label><textarea id="recon-shares" spellcheck="false" required placeholder='[["1","42"],["2","91"],["3","150"]]'></textarea></div>
+        <button type="submit">Reconstruct</button>
+      </form>
+      <p id="recon-status" class="status" role="status" aria-live="polite"></p>
+      <div id="recon-output" class="output" aria-label="Reconstructed secret">No reconstruction yet.</div>
+      <p class="hint">Input at least k valid shares. The browser cannot infer the original threshold or detect coordinated forgery from shares alone.</p>
+    </section>
+  </div>
+  <footer>Uses JavaScript BigInt, Web Crypto randomness and a deterministic 64-bit primality test; larger integers use a 40-round probable-prime test. No browser storage, analytics, telemetry or third-party scripts. <a href="https://github.com/abusuraihsakhri/shamir-secret-sharing-mpc">Source and Python CLI</a>.</footer>
+</main>
+<script src="./shamir.js"></script>
+<script>
+"use strict";
+const byId = id => document.getElementById(id);
+let latest = null;
+function status(which, message, failed) {
+  const element = byId(which);
+  element.className = "status " + (failed ? "error" : "success");
+  element.textContent = message;
+}
+byId("split-form").addEventListener("submit", event => {
+  event.preventDefault();
+  byId("split-output").textContent = "Calculating...";
+  byId("copy-button").disabled = true;
+  latest = null;
+  try {
+    const res = ShamirDemo.split(byId("secret").value.trim(), byId("threshold").value,
+      byId("count").value, byId("split-prime").value.trim());
+    latest = JSON.stringify(res, null, 2);
+    byId("split-output").textContent = latest;
+    byId("recon-prime").value = res.prime;
+    byId("recon-shares").value = JSON.stringify(res.shares.slice(0, res.threshold), null, 2);
+    byId("copy-button").disabled = false;
+    status("split-status", "Generated " + res.num_shares + " shares. Reconstruction fields populated.", false);
+  } catch (error) {
+    byId("split-output").textContent = "No valid shares generated.";
+    status("split-status", error.message, true);
+  }
+});
+byId("copy-button").addEventListener("click", async () => {
+  if (!latest) return;
+  try {
+    await navigator.clipboard.writeText(latest);
+    status("split-status", "Shares JSON copied.", false);
+  } catch (error) {
+    status("split-status", "Clipboard unavailable. Select and copy the output manually.", true);
+  }
+});
+byId("recon-form").addEventListener("submit", event => {
+  event.preventDefault();
+  try {
+    const shares = JSON.parse(byId("recon-shares").value);
+    const recovered = ShamirDemo.reconstruct(shares, byId("recon-prime").value.trim());
+    byId("recon-output").textContent = recovered;
+    status("recon-status", "Interpolation completed. Verify against a trusted reference.", false);
+  } catch (error) {
+    byId("recon-output").textContent = "No valid reconstruction.";
+    status("recon-status", error.message, true);
+  }
+});
+</script>
 </body>
 </html>
