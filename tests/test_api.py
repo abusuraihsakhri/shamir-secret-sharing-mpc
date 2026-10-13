@@ -16,6 +16,11 @@ def test_enterprise_audit_api(monkeypatch):
     })
     assert response.status_code == 200, response.text
     assert response.json()["task_id"] == "API-001"
+    rejected = client.post("/api/audit", json={
+        "task_id": "API-BAD", "target_identifier": "TARGET-002",
+        "primary_metric": 3.0, "attributes": {"contact": "test@example.org"}
+    })
+    assert rejected.status_code == 422
     log = client.get("/api/audit/logs")
     assert log.status_code == 200
     assert log.json()["verified"] is True
