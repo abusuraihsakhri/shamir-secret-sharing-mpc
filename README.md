@@ -1,144 +1,91 @@
 # Shamir Secret Sharing MPC
 
-> **Domain:** Post-Quantum Cryptography & Zero-Knowledge Architecture
-> **Standards:** Shamir (k,n) Threshold Scheme, Feldman VSS
+A Python demonstration of Shamir (k, n) threshold secret sharing over prime fields, with a separate rule-based audit API and a static browser demonstration.
 
-<div align="center">
+## Browser application
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB.svg?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688.svg?logo=fastapi&logoColor=white)
+The self-contained interface is in [web/index.html](web/index.html). It uses JavaScript BigInt and Web Crypto to generate shares and reconstruct integers in the browser. It does not submit secrets to a server or use analytics/browser storage. It limits the demonstration to 64 shares and 256-bit secret integers.
 
-</div>
-
----
-
-## What It Does
-
-**Shamir Secret Sharing MPC** implements Shamir (k,n) verifiable threshold secret sharing over prime fields, including share generation, Lagrange interpolation reconstruction, share verification, and information-theoretic security analysis. It also includes a FastAPI REST server and a multi-agent auditing framework.
-
----
-
-## Key Features
-
-- **Secret Sharing Engine**: Split secrets into n shares where any k can reconstruct (uses cryptographically secure randomness)
-- **Lagrange Interpolation**: Reconstruct secrets from any k shares
-- **Share Verification**: Validate shares and verify reconstruction correctness
-- **Hash-based Commitments**: SHA-256 commitments for share integrity
-- **Information-Theoretic Security Analysis**: Analyze the perfect secrecy guarantees
-- **Multi-Agent Auditing Framework**: Sub-agent system for payload evaluation with HMAC-SHA256 audit trail
-- **FastAPI REST API**: HTTP endpoints for remote operation
-- **Prometheus Metrics**: Operational telemetry export
-
----
-
-## Installation
+To run locally:
 
 ```bash
-pip install -e .
+python -m http.server 8080 --directory web
 ```
 
-For development (with test dependencies):
+Open http://localhost:8080/ in a modern browser with JavaScript BigInt and Web Crypto support. A GitHub Pages publishing workflow is included; a public URL will be documented after deployment is verified.
+
+## Python installation
+
+Python 3.9+ is supported. The core engine uses the standard library.
+
 ```bash
-pip install -e ".[dev]"
+python -m pip install -e .
+# For API and test dependencies:
+python -m pip install -e ".[all]"
 ```
 
----
-
-## CLI Usage
-
-### Secret Sharing CLI
+## Secret-sharing CLI
 
 ```bash
-# Split a secret into shares
-python cli.py split --secret 12345 --k 3 --n 5
-
-# Reconstruct from shares
-python cli.py reconstruct --shares '[[1, 123], [2, 456], [3, 789]]' --prime 257
-
-# Verify shares reconstruct correctly
-python cli.py verify --shares '[[1, 123], [2, 456], [3, 789]]' --secret 12345 --k 3 --prime 257
-
-# Information-theoretic security analysis
-python cli.py info --k 3 --n 5 --prime 257
-
-# Generate a commitment for a share
-python cli.py commit --share '[1, 123]' --prime 257
+shamir-share split --secret 12345 --k 3 --n 5
+shamir-share reconstruct --shares '[[1,100],[2,70],[3,200]]' --prime 257
+shamir-share verify --shares '[[1,100],[2,70],[3,200]]' --secret 123 --k 3 --prime 257
+shamir-share info --k 3 --n 5 --prime 257
 ```
 
-### Agent Framework CLI
+The reconstruction command requires the *same modulus* supplied at splitting and at least k authentic shares. The sample share arrays above illustrate syntax only; they are not a valid reconstruction vector. The full module entry point `python cli.py` is also supported.
+
+Run the separate deterministic audit coordinator with:
 
 ```bash
-# Run audit evaluation
-python -m shamir_mpc_agent.cli audit --task-id TASK-001
-
-# Batch process CSV
+python -m shamir_mpc_agent.cli audit --task-id DEMO-001
 python -m shamir_mpc_agent.cli batch -i sample.csv -o results.csv
-
-# Launch REST server
-python -m shamir_mpc_agent.cli serve --host 127.0.0.1 --port 8000
 ```
 
----
+This audit coordinator applies **illustrative numerical threshold rules**, not cryptographic Feldman verification.
 
-## REST API
+## API and container
 
-When running the server (`python -m shamir_mpc_agent.cli serve`), the following endpoints are available:
+The Docker image runs `agents.api:app`, an in-memory rule-based audit service with HMAC-SHA256 audit-chain records. **Its API has no authentication. Do not expose it to untrusted networks.** Compose binds the host port to `127.0.0.1:8000`.
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/health` | Health check |
-| POST | `/api/audit` | Run audit evaluation |
-| POST | `/api/chat` | Query supervisory chat |
-
----
-
-## Testing
+Generate a new audit key locally (never commit the value):
 
 ```bash
-# Run all tests
-pytest -v
-
-# Run specific test module
-pytest tests/test_shamir_secret_sharing_mpc.py -v
+export AUDIT_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_hex(32))')"
+docker compose up --build
 ```
 
----
+API endpoints include `GET /health`, `GET /metrics`, `POST /api/audit`, `POST /api/chat`, and `GET /api/audit/logs`. Interactive local documentation is at http://127.0.0.1:8000/docs. The separate legacy API can be started with `python -m shamir_mpc_agent.cli serve` and has a different response schema.
 
-## Security Notes
+## Correctness, privacy, and security limits
 
-- The secret sharing engine uses `secrets.randbelow()` for cryptographically secure coefficient generation
-- The HMAC-SHA256 audit trail requires the `AUDIT_SECRET_KEY` environment variable (minimum 16 characters)
-- Set the audit key before running:
-  ```bash
-  export AUDIT_SECRET_KEY="your-secure-key-here"
-  ```
+- The arithmetic uses prime fields GF(p), cryptographically sourced random coefficients, and Lagrange interpolation. The Python and browser primality tests are deterministic below 2^64; beyond that they perform **40 probabilistic Miller–Rabin rounds** rather than mathematical prime certification.
+- Share-coordinate validation and polynomial consistency checks **do not authenticate** a share or prove dealer honesty. The deterministic SHA-256 share hashes are integrity fingerprints, **not hiding or Feldman commitments**; publishing them can disclose low-entropy shares by enumeration.
+- This repository does **not** implement Feldman VSS, secure multiparty computation, distributed key generation, proactive rotation, cryptographic side-channel resistance, or certified post-quantum cryptography. The additional rule-based enrichment classes do not constitute independent cryptographic validation.
+- The Shamir information-theoretic privacy claim applies to fewer than k **private shares**, uniformly random polynomial coefficients, and does not account for publicly revealing share hashes. The secrecy *entropy* estimate assumes a uniform secret prior.
+- Both Python and browser implementations are educational and **not validated for production key custody**. Python big-integer arithmetic and JavaScript BigInt are not constant-time. Avoid inputting real secrets into the browser, command-line arguments (shell history/process listings), or the unauthenticated REST service.
+- The audit API stores records only in process memory, uses heuristic identifier filtering rather than comprehensive deidentification, and is not an immutable or externally anchored log. A previously hard-coded Compose key existed in repository history; treat it as disclosed and do not reuse it.
 
----
+## Tests
 
-## Project Structure
-
-```
-shamir-secret-sharing-mpc/
-├── shamir_mpc_agent/      # Core engine and agent framework
-│   ├── engine.py          # Secret sharing math (split, reconstruct, verify)
-│   ├── agents.py          # Sub-agent auditing system
-│   ├── models.py          # Data models
-│   ├── cli.py             # Agent CLI entry point
-│   └── server.py          # FastAPI application
-├── agents/                # Enterprise agent framework
-│   ├── base.py            # PHI guard, audit trail, security
-│   ├── supervisor.py      # Master orchestrator
-│   ├── workers.py         # Domain worker agents
-│   └── models.py          # Pydantic schemas
-├── tests/                 # Test suite
-├── cli.py                 # Secret sharing CLI
-├── enrichment.py          # Enrichment feature suite
-└── pyproject.toml         # Package configuration
+```bash
+python -m pip install -e ".[all]"
+python -m pytest -q
+node --test tests/web.test.cjs  # Node.js 20+
 ```
 
----
+GitHub Actions runs Python tests across 3.9–3.13, JavaScript regression tests, dependency checks, and a test-key-only HMAC integrity smoke test. The Pages workflow deploys the `web/` folder when GitHub Pages is enabled for the repository.
+
+## Code layout
+
+- `shamir_mpc_agent/engine.py` — Shamir arithmetic, share validation and interpolation
+- `cli.py` — core secret-sharing CLI
+- `shamir_mpc_agent/` — additional rule-based coordinator and legacy API
+- `agents/` — illustrative audit workers, HMAC log, and container API
+- `web/` — static browser demonstration
+- `enrichment.py` — rule-based heuristic templates (not cryptographic primitives)
+- `tests/` — Python and browser regression tests
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+[MIT](LICENSE).
