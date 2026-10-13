@@ -6,7 +6,9 @@ Uses only Python stdlib.
 """
 import secrets
 import hashlib
+import hmac
 import json
+import math
 from typing import List, Tuple, Dict, Any, Optional
 
 
@@ -16,7 +18,9 @@ from typing import List, Tuple, Dict, Any, Optional
 
 def _mod_inverse(a: int, p: int) -> int:
     """Compute modular inverse of a mod p using Fermat's little theorem (p must be prime)."""
-    return pow(a, p - 2, p)
+    if a % p == 0:
+        raise ValueError("Zero has no multiplicative inverse")
+    return pow(a, -1, p)
 
 
 def _mod_pow(base: int, exp: int, mod: int) -> int:
@@ -48,8 +52,12 @@ def generate_coefficients(k: int, p: int, secret: int) -> List[int]:
     Returns [secret, a1, a2, ..., a_{k-1}] where each ai is random in [0, p).
     Uses cryptographically secure randomness (secrets module).
     """
+    if not all(type(v) is int for v in (k, p, secret)):
+        raise TypeError("Threshold, modulus and secret must be integers")
     if k < 2:
         raise ValueError("Threshold k must be at least 2")
+    if not _is_prime(p):
+        raise ValueError("Modulus p must be prime")
     if secret < 0 or secret >= p:
         raise ValueError(f"Secret must be in [0, {p})")
     coefficients = [secret]
@@ -77,6 +85,8 @@ def generate_shares(secret: int, k: int, n: int, p: Optional[int] = None) -> Tup
     Returns:
         Tuple of (list of (x, y) share tuples, prime p)
     """
+    if not all(type(v) is int for v in (secret, k, n)) or (p is not None and type(p) is not int):
+        raise TypeError("Secret, threshold, share count and modulus must be integers")
     if k > n:
         raise ValueError("Threshold k cannot exceed number of shares n")
     if k < 2:
@@ -88,6 +98,8 @@ def generate_shares(secret: int, k: int, n: int, p: Optional[int] = None) -> Tup
     if p is None:
         p = _find_prime_larger_than(max(secret, n) + 1)
     
+    if not _is_prime(p):
+        raise ValueError("Modulus p must be prime")
     if secret < 0 or secret >= p:
         raise ValueError(f"Secret must be in [0, {p})")
     if n >= p:
@@ -102,29 +114,51 @@ def generate_shares(secret: int, k: int, n: int, p: Optional[int] = None) -> Tup
 
 
 def _find_prime_larger_than(min_val: int) -> int:
-    """Find the smallest prime >= min_val."""
-    candidate = max(min_val, 2)
-    if candidate % 2 == 0:
-        candidate += 1
+    """Find the first (probable for >64-bit) prime >= min_val."""
+    if type(min_val) is not int:
+        raise TypeError("Prime lower bound must be an integer")
+    if min_val <= 2:
+        return 2
+    candidate = min_val | 1
     while not _is_prime(candidate):
         candidate += 2
     return candidate
 
 
 def _is_prime(n: int) -> bool:
-    """Deterministic primality test for reasonably sized numbers."""
-    if n < 2:
+    """Miller-Rabin: deterministic for n < 2**64; 40 random rounds above.
+
+    Above 64 bits this is a strong probable-prime test, not a proof.
+    """
+    if type(n) is not int or n < 2:
         return False
-    if n < 4:
-        return True
-    if n % 2 == 0 or n % 3 == 0:
-        return False
-    i = 5
-    while i * i <= n:
-        if n % i == 0 or n % (i + 2) == 0:
+    small = (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37)
+    for prime in small:
+        if n == prime:
+            return True
+        if n % prime == 0:
             return False
-        i += 6
-    return True
+    d = n - 1
+    r = 0
+    while d % 2 == 0:
+        d //= 2
+        r += 1
+
+    def witness(a: int) -> bool:
+        x = pow(a, d, n)
+        if x in (1, n - 1):
+            return False
+        for _ in range(r - 1):
+            x = x * x % n
+            if x == n - 1:
+                return False
+        return True
+
+    if n < 2**64:
+        bases = (2, 325, 9375, 28178, 450775, 9780504, 1795265022)
+    else:
+        bases = (secrets.randbelow(n - 3) + 2 for _ in range(40))
+    return not any(witness(a % n) for a in bases)
 
 
 # ---------------------------------------------------------------------------
