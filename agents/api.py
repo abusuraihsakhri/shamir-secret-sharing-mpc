@@ -4,7 +4,7 @@ FastAPI REST API Server for Shamir Secret Sharing Mpc.
 from typing import Dict, Any, List
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from .base import AuditLogger, PHIGuard
+from .base import AuditLogger, PHIGuard, SecurityException
 from .models import SystemTaskPayload, ConsensusDossier
 from .supervisor import SystemSupervisor
 
@@ -12,7 +12,7 @@ supervisor = SystemSupervisor(model_provider="mock")
 
 app = FastAPI(
     title="Shamir Secret Sharing Mpc API",
-    description="Enterprise Distributed Component Platform (Post-Quantum Cryptography & Hardware Security)",
+    description="Rule-based demonstration API; not a certified cryptographic audit service",
     version="3.0.0-ENTERPRISE",
 )
 
@@ -37,7 +37,10 @@ def metrics():
 
 @app.post("/api/audit")
 def api_audit(payload: SystemTaskPayload):
-    dossier = supervisor.process_task(payload)
+    try:
+        dossier = supervisor.process_task(payload)
+    except SecurityException:
+        raise HTTPException(status_code=422, detail="Potential sensitive identifier detected") from None
     return dossier.to_dict()
 
 
