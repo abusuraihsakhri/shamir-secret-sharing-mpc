@@ -4,24 +4,35 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "shamir-secret-sharing-mpc"
-version = "2.0.0"
-description = "Shamir (k, n) Verifiable Threshold Secret Sharing & Distributed Key Generation Engine"
+version = "2.0.1"
+description = "Shamir threshold secret sharing, finite-field arithmetic, and illustrative audit framework"
 readme = "README.md"
-authors = [{ name = "Dr. Abu Suraih Sakhri", email = "abusuraih@example.com" }]
+authors = [{ name = "Dr. Abu Suraih Sakhri" }]
 license = { text = "MIT" }
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
-    "Topic :: Security/Cryptography",
-    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Security :: Cryptography",
 ]
 requires-python = ">=3.9"
 dependencies = []
 
+[project.optional-dependencies]
+server = ["fastapi>=0.110,<1", "uvicorn>=0.27,<1", "pydantic>=2,<3"]
+dev = ["pytest>=7,<10"]
+all = ["fastapi>=0.110,<1", "uvicorn>=0.27,<1", "pydantic>=2,<3", "pytest>=7,<10"]
+
 [project.scripts]
 shamir-secret-sharing-mpc = "shamir_mpc_agent.cli:main"
+shamir-share = "cli:main"
 
 [project.urls]
 Homepage = "https://github.com/abusuraihsakhri/shamir-secret-sharing-mpc"
-Repository = "https://github.com/abusuraihsakhri/shamir-secret-sharing-mpc.git"
+Repository = "https://github.com/abusuraihsakhri/shamir-secret-sharing-mpc"
+
+[tool.setuptools]
+py-modules = ["cli", "enrichment", "simulator", "shamir_mpc_agent_app"]
+
+[tool.setuptools.packages.find]
+include = ["shamir_mpc_agent*", "agents*"]
