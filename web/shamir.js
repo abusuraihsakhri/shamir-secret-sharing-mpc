@@ -5,6 +5,7 @@
 
   function integer(value, label) {
     const input = String(value);
+    if (input.length > 100) throw new Error(label + " exceeds the 100-digit input limit");
     if (!/^(0|[1-9][0-9]*)$/.test(input)) {
       throw new Error(label + " must be a non-negative decimal integer");
     }
@@ -120,7 +121,7 @@
   function reconstruct(sharesInput, primeInput) {
     const p = integer(primeInput, "Modulus");
     if (!isPrime(p)) throw new Error("Modulus must be prime");
-    if (!Array.isArray(sharesInput) || sharesInput.length < 2 || sharesInput.length >= Number(p)) {
+    if (!Array.isArray(sharesInput) || sharesInput.length < 2 || sharesInput.length > 64 || sharesInput.length >= Number(p)) {
       throw new Error("At least two and fewer than p shares are required");
     }
     const shares = sharesInput.map((share) => {
