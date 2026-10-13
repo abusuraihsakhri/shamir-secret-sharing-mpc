@@ -166,40 +166,24 @@ def _is_prime(n: int) -> bool:
 # ---------------------------------------------------------------------------
 
 def reconstruct_secret(shares: List[Tuple[int, int]], p: int) -> int:
+    """Interpolate f(0) from at least two distinct canonical shares.
+
+    Callers must know the threshold: it cannot be recovered from shares.
     """
-    Reconstruct the secret from shares using Lagrange interpolation at x=0.
-    
-    S = Σ(y_i × Π(j≠i) x_j / (x_j - x_i)) mod p
-    
-    Args:
-        shares: List of (x, y) tuples
-        p: Prime modulus
-    
-    Returns:
-        The reconstructed secret
-    """
+    if not _is_prime(p):
+        raise ValueError("Modulus p must be prime")
     if len(shares) < 2:
         raise ValueError("Need at least 2 shares to reconstruct")
-
-    # Verify all x values are distinct
-    x_values = [s[0] for s in shares]
-    if len(set(x_values)) != len(x_values):
-        raise ValueError("Duplicate x values in shares")
-
+    if not verify_shares(shares, p):
+        raise ValueError("Invalid, duplicate or non-canonical share coordinates")
     secret = 0
     for i, (xi, yi) in enumerate(shares):
-        # Compute Lagrange basis polynomial L_i(0)
-        numerator = 1
-        denominator = 1
+        numerator = denominator = 1
         for j, (xj, _) in enumerate(shares):
-            if i == j:
-                continue
-            numerator = (numerator * (-xj)) % p
-            denominator = (denominator * (xi - xj)) % p
-        
-        lagrange_coeff = (numerator * _mod_inverse(denominator % p, p)) % p
-        secret = (secret + yi * lagrange_coeff) % p
-
+            if i != j:
+                numerator = numerator * (-xj) % p
+                denominator = denominator * (xi - xj) % p
+        secret = (secret + yi * numerator * _mod_inverse(denominator, p)) % p
     return secret
 
 
@@ -208,45 +192,52 @@ def reconstruct_secret(shares: List[Tuple[int, int]], p: int) -> int:
 # ---------------------------------------------------------------------------
 
 def verify_share(share: Tuple[int, int], p: int) -> bool:
-    """
-    Verify that a share has valid coordinates.
-    x must be > 0 and y must be in [0, p).
-    """
-    x, y = share
-    return x > 0 and 0 <= y < p
+    """Check canonical coordinates. This is not VSS authentication."""
+    try:
+        x, y = share
+    except (TypeError, ValueError):
+        return False
+    return (type(p) is int and p > 2 and type(x) is int and
+            type(y) is int and 0 < x < p and 0 <= y < p)
 
 
 def verify_shares(shares: List[Tuple[int, int]], p: int) -> bool:
-    """Verify that all shares have valid coordinates."""
-    return all(verify_share(s, p) for s in shares)
+    """Validate the field, coordinate ranges and unique x values."""
+    if not _is_prime(p) or not shares:
+        return False
+    if not all(verify_share(share, p) for share in shares):
+        return False
+    return len({share[0] for share in shares}) == len(shares)
 
 
 def verify_reconstruction(shares: List[Tuple[int, int]], p: int, expected_secret: int) -> bool:
-    """
-    Verify that a set of shares reconstructs to the expected secret.
-    """
-    reconstructed = reconstruct_secret(shares, p)
-    return reconstructed == expected_secret
+    """Check reconstruction against a trusted expected secret."""
+    if type(expected_secret) is not int or not _is_prime(p) or not 0 <= expected_secret < p:
+        return False
+    if not verify_shares(shares, p):
+        return False
+    return reconstruct_secret(shares, p) == expected_secret
 
 
 def verify_consistency(shares: List[Tuple[int, int]], k: int, p: int) -> bool:
+    """Ensure every supplied share lies on the degree < k polynomial.
+
+    Algebraic consistency is not authenticity or a Feldman VSS proof.
     """
-    Verify that shares are consistent: any subset of k shares
-    should reconstruct to the same secret.
-    """
-    if len(shares) < k:
+    if type(k) is not int or k < 2 or len(shares) < k or not verify_shares(shares, p):
         return False
-    
-    # Take first k shares and reconstruct
-    subset1 = shares[:k]
-    secret1 = reconstruct_secret(subset1, p)
-    
-    # Take a different subset of k shares if possible
-    if len(shares) > k:
-        subset2 = shares[1:k+1]
-        secret2 = reconstruct_secret(subset2, p)
-        return secret1 == secret2
-    
+    selected = shares[:k]
+    for x, y in shares[k:]:
+        predicted = 0
+        for i, (xi, yi) in enumerate(selected):
+            numerator = denominator = 1
+            for j, (xj, _) in enumerate(selected):
+                if i != j:
+                    numerator = numerator * (x - xj) % p
+                    denominator = denominator * (xi - xj) % p
+            predicted = (predicted + yi * numerator * _mod_inverse(denominator, p)) % p
+        if predicted != y:
+            return False
     return True
 
 
@@ -255,10 +246,10 @@ def verify_consistency(shares: List[Tuple[int, int]], k: int, p: int) -> bool:
 # ---------------------------------------------------------------------------
 
 def information_theoretic_security(k: int, n: int, p: int) -> Dict[str, Any]:
-    """
-    Analyze information-theoretic security of the sharing scheme.
-    With k-1 shares, every possible secret value in [0, p) is equally likely.
-    """
+    """Conditional privacy of private Shamir shares, not public hashes."""
+    if (any(type(v) is not int for v in (k, n, p)) or
+            not 2 <= k <= n < p or not _is_prime(p)):
+        raise ValueError("Require 2 <= k <= n < prime p (integer values)")
     return {
         "threshold": k,
         "num_shares": n,
@@ -266,9 +257,14 @@ def information_theoretic_security(k: int, n: int, p: int) -> Dict[str, Any]:
         "shares_needed_for_reconstruction": k,
         "shares_revealing_no_info": k - 1,
         "possible_secrets_with_k_minus_1_shares": p,
-        "bits_of_uncertainty": p.bit_length() - 1 if p > 1 else 0,
+        "bits_of_uncertainty": math.log2(p),
         "is_perfect_secrecy": True,
-        "security_note": f"With {k-1} or fewer shares, every value in [0, {p}) is equally likely as the secret.",
+        "security_note": (
+            "Fewer than k PRIVATE shares reveal no information about the secret "
+            "when polynomial coefficients are uniformly random. Entropy assumes "
+            "a uniform secret prior. Public deterministic share hashes are NOT "
+            "hiding commitments; this is not Feldman VSS or an MPC/DKG protocol."
+        ),
     }
 
 
@@ -284,7 +280,7 @@ def commit_share(share: Tuple[int, int], p: int) -> str:
 
 def verify_commitment(share: Tuple[int, int], p: int, commitment: str) -> bool:
     """Verify a share commitment."""
-    return commit_share(share, p) == commitment
+    return isinstance(commitment, str) and hmac.compare_digest(commit_share(share, p), commitment)
 
 
 # ---------------------------------------------------------------------------
@@ -314,8 +310,8 @@ def reconstruct_from_shares(shares: List[Tuple[int, int]], p: int) -> Dict[str, 
     """
     High-level API: reconstruct secret from shares.
     """
-    if not verify_shares(shares, p):
-        return {"error": "Invalid share coordinates", "valid": False}
+    if not verify_shares(shares, p) or len(shares) < 2:
+        return {"error": "Invalid, duplicate or insufficient shares", "valid": False}
 
     secret = reconstruct_secret(shares, p)
 
