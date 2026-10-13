@@ -1,7 +1,7 @@
 "use strict";
 const assert = require("node:assert/strict");
 const test = require("node:test");
-globalThis.crypto = require("node:crypto").webcrypto;
+Object.defineProperty(globalThis, "crypto", {value: require("node:crypto").webcrypto, configurable: true});
 const Shamir = require("../web/shamir.js");
 
 test("prime validation rejects composites and pseudoprimes", () => {
