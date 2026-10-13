@@ -35,3 +35,14 @@ test("reject composites, duplicate, alias, and invalid inputs", () => {
   assert.throws(() => Shamir.reconstruct([["1", "1"], ["1", "2"]], "257"));
   assert.throws(() => Shamir.reconstruct([["1", "1"]], "257"));
 });
+
+test("browser page has valid inline JavaScript and references local runtime", () => {
+  const fs = require("node:fs");
+  const vm = require("node:vm");
+  const path = require("node:path");
+  const html = fs.readFileSync(path.join(__dirname, "../web/index.html"), "utf8");
+  assert.match(html, /src="\.\/shamir\.js"/);
+  const inline = html.match(/<script>([\s\S]*?)<\/script>/);
+  assert.ok(inline, "inline UI script missing");
+  assert.doesNotThrow(() => new vm.Script(inline[1]));
+});
