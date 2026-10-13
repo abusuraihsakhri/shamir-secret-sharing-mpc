@@ -28,12 +28,12 @@ python -m pip install -e ".[all]"
 
 ```bash
 shamir-share split --secret 12345 --k 3 --n 5
-shamir-share reconstruct --shares '[[1,100],[2,70],[3,200]]' --prime 257
-shamir-share verify --shares '[[1,100],[2,70],[3,200]]' --secret 123 --k 3 --prime 257
+shamir-share reconstruct --shares '[[1,128],[2,139],[3,156]]' --prime 257
+shamir-share verify --shares '[[1,128],[2,139],[3,156]]' --secret 123 --k 3 --prime 257
 shamir-share info --k 3 --n 5 --prime 257
 ```
 
-The reconstruction command requires the *same modulus* supplied at splitting and at least k authentic shares. The sample share arrays above illustrate syntax only; they are not a valid reconstruction vector. The full module entry point `python cli.py` is also supported.
+The reconstruction command requires the *same modulus* supplied at splitting and at least k authentic shares. The reconstruction/verification sample is a valid GF(257) vector from the polynomial f(x) = 123 + 2x + 3x². The preceding split example is independent. The full module entry point `python cli.py` is also supported.
 
 Run the separate deterministic audit coordinator with:
 
